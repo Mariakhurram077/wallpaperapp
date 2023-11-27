@@ -1,6 +1,7 @@
 package com.example.wallpapercomposeapp.activities
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,6 +18,7 @@ import androidx.navigation.navArgument
 import com.example.wallpapercomposeapp.data.CategoriesData
 import com.example.wallpapercomposeapp.screens.Categories
 import com.example.wallpapercomposeapp.screens.CategoriesWallpapers
+import com.example.wallpapercomposeapp.screens.SearchWallpapers
 import com.example.wallpapercomposeapp.screens.SplashScreen
 import com.example.wallpapercomposeapp.screens.WallpaperImage
 import com.example.wallpapercomposeapp.screens.WallpapersScreen
@@ -59,6 +61,8 @@ fun WallpapersApp() {
             })) {
             val imageUrl=it.arguments?.getString("imageUrl")
             val imageId=it.arguments?.getInt("imageId")
+
+            Log.i("wallpaperImageId", "WallpapersApp: $imageId")
             WallpaperImage(imageUrl = imageUrl!!,imageId!!,navController)
         }
 
@@ -73,6 +77,10 @@ fun WallpapersApp() {
         )){
             val categoryName=it.arguments?.getString("categoryName")
             CategoriesWallpapers(categoryName = categoryName!!, navController = navController)
+        }
+
+        composable("SearchWallpapers"){
+            SearchWallpapers(navController)
         }
     }
 }

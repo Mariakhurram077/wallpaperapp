@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -47,7 +48,7 @@ import com.example.wallpapercomposeapp.model.TabItemModel
 fun WallpapersScreen(navController: NavController, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     Column(modifier = modifier.background(colorResource(id = R.color.backgroundcolor))) {
-        TopBar()
+        TopBar(navController)
         TabLayout(navController)
     }
 
@@ -56,7 +57,7 @@ fun WallpapersScreen(navController: NavController, modifier: Modifier = Modifier
     }
 }
 @Composable
-fun TopBar(modifier: Modifier = Modifier) {
+fun TopBar(navController: NavController,modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .background(Color.Black)
@@ -75,7 +76,9 @@ fun TopBar(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .size(50.dp)
                 .padding(end = 20.dp)
-                .align(Alignment.CenterVertically),
+                .align(Alignment.CenterVertically).clickable {
+                        navController.navigate("SearchWallpapers")
+                },
             colorFilter = ColorFilter.tint(Color.White)
         )
     }

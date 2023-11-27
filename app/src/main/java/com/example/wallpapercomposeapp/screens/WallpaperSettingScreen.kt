@@ -17,6 +17,7 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,10 +55,19 @@ fun WallpaperImage(imageUrl: String, imageId:Int, navController: NavController, 
     val favoriteViewModel: FavoritesViewModel = hiltViewModel()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    val isFavorite=favoriteViewModel.checkFavoriteWallpaper(imageId)
+    var isFavorite by remember { mutableStateOf(false) }
     var favIcon by remember(isFavorite) {
         mutableStateOf(if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder)
     }
+
+    LaunchedEffect(imageId) {
+        val isFav = withContext(Dispatchers.IO) {
+            favoriteViewModel.checkFavoriteWallpaper(imageId)
+        }
+        isFavorite = isFav
+        favIcon = if (isFav) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder
+    }
+
 
     Box(modifier = modifier.fillMaxSize()) {
         AsyncImage(

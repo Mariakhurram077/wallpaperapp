@@ -24,6 +24,9 @@ class WallpaperViewModel @Inject constructor(
         }
     }
     init {
+        getAllWallpapers()
+    }
+    fun getAllWallpapers() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 wallpapersRepository.getAllWallpapers(Constants.api_KEY, 1, 200, _wallpapersType.value, true)

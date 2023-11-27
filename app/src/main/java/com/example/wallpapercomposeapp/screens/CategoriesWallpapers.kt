@@ -27,6 +27,7 @@ fun CategoriesWallpapers(modifier: Modifier = Modifier,categoryName:String,navCo
     val wallpapersImages: State<List<WallpapersDataModel>> =
         wallpaperViewModel.wallpapersStateFlow.collectAsState()
     wallpaperViewModel.updateWallpapersType(categoryName)
+   // wallpaperViewModel.getAllWallpapers()
     Column(modifier = modifier.background(Color.Black)) {
         CategoriesTopBar(categoryName)
         if (wallpapersImages.value.isEmpty()){
