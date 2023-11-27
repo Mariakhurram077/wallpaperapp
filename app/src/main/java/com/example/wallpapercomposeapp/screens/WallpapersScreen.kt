@@ -1,117 +1,161 @@
 package com.example.wallpapercomposeapp.screens
 
-import android.util.Log
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Shapes
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
+import androidx.navigation.NavController
 import com.example.wallpapercomposeapp.R
-import com.example.wallpapercomposeapp.model.WallpapersDataModel
-import com.example.wallpapercomposeapp.viewmodel.WallpaperViewModel
-
+import com.example.wallpapercomposeapp.data.CategoriesData
+import com.example.wallpapercomposeapp.helpers.BackPressHelper
+import com.example.wallpapercomposeapp.model.TabItemModel
 @Composable
-fun WallpapersScreen(modifier: Modifier=Modifier) {
-    val wallpaperViewModel: WallpaperViewModel = hiltViewModel()
-    val wallpapersImages: State<List<WallpapersDataModel>> =
-        wallpaperViewModel.wallpapersStateFlow.collectAsState()
+fun WallpapersScreen(navController: NavController, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
     Column(modifier = modifier.background(colorResource(id = R.color.backgroundcolor))) {
         TopBar()
-        if (wallpapersImages.value.isEmpty()) {
-            SimpleCircularProgressComponent()
-        } else {
-            LazyVerticalGrid(columns = GridCells.Fixed(3), content = {
-                items(wallpapersImages.value) {
-                    WallpaperImageCard(imageUrl = it.largeImageURL)
-                    Log.i("imageUrl", "WallpapersScreen: ${it.largeImageURL}")
-                }
-            })
-        }
+        TabLayout(navController)
+    }
+
+    BackHandler {
+        BackPressHelper.onBackPressing(context)
     }
 }
-
 @Composable
-fun WallpaperImageCard(imageUrl: String, modifier: Modifier = Modifier) {
-    AsyncImage(
-        model = ImageRequest.Builder(LocalContext.current)
-            .data(imageUrl)
-            .crossfade(true)
-            .build(),
-        contentDescription = stringResource(R.string.description),
-        contentScale = ContentScale.Crop,
+fun TopBar(modifier: Modifier = Modifier) {
+    Row(
         modifier = modifier
-            .padding(3.dp)
-            .size(200.dp)
-            .clip(Shapes().medium),
-    )
-}
-
-@Composable
-fun SimpleCircularProgressComponent(modifier: Modifier=Modifier) {
-    Column(
-        modifier = modifier
+            .background(Color.Black)
             .fillMaxWidth()
-            .fillMaxHeight(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        CircularProgressIndicator(
-            modifier = Modifier.padding(16.dp),
-            color = colorResource(id = R.color.white),
-            strokeWidth = Dp(value = 4F)
+        Text(
+            text = stringResource(id = R.string.wallpapers),
+            modifier = Modifier
+                .padding(start = 24.dp, top = 18.dp, bottom = 14.dp)
+                .weight(1f),
+            color = Color.White, fontWeight = FontWeight.Bold, fontSize = 23.sp
         )
-    }
-}
-
-@Composable
-fun TopBar(modifier: Modifier=Modifier) {
-    Row(modifier = modifier.background(Color.Black).fillMaxWidth()) {
-        Text(text = stringResource(id = R.string.wallpapers),
-            modifier = Modifier.padding(start = 20.dp, top = 14.dp, bottom = 14.dp).weight(1f),
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            fontSize = 26.sp)
         Image(
             imageVector = Icons.Outlined.Search,
             contentDescription = stringResource(id = R.string.description),
-            modifier = Modifier.size(50.dp).padding(end = 20.dp).align(Alignment.CenterVertically),
+            modifier = Modifier
+                .size(50.dp)
+                .padding(end = 20.dp)
+                .align(Alignment.CenterVertically),
             colorFilter = ColorFilter.tint(Color.White)
         )
     }
 }
-
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun tabLayout(modifier: Modifier=Modifier){
-    val tabItems= listOf("Trending","Categories","Premium")
+fun TabLayout(navController: NavController, modifier: Modifier = Modifier) {
+    val tabItems = listOf(TabItemModel("Trending"), TabItemModel("Categories"), TabItemModel("Favorites"))
+    var selectedTabIndex by remember {
+        mutableIntStateOf(0)
+    }
+
+    val pagerState = rememberPagerState {
+        tabItems.size
+    }
+
+    LaunchedEffect(key1 = selectedTabIndex) {
+        pagerState.animateScrollToPage(selectedTabIndex)
+    }
+
+    LaunchedEffect(key1 = pagerState.currentPage, pagerState.isScrollInProgress) {
+        if (!pagerState.isScrollInProgress) {
+            selectedTabIndex = pagerState.currentPage
+        }
+    }
+
+    Column(modifier.fillMaxSize()) {
+        TabRow(selectedTabIndex = selectedTabIndex, containerColor = Color.Black,
+            indicator = { tabPositions ->
+                Box(
+                    modifier = Modifier
+                        .tabIndicatorOffset(tabPositions[selectedTabIndex])
+                        .height(3.dp)
+                        .padding(horizontal = 36.dp)
+                        .background(
+                            color = colorResource(id = R.color.indicatorcolor),
+                            shape = RoundedCornerShape(18.dp)
+                        )
+                )
+            }) {
+            tabItems.forEachIndexed { index, item ->
+                Tab(
+                    selected = index == selectedTabIndex,
+                    onClick = {
+                        selectedTabIndex = index
+                    },
+                    text = {
+                        when (index) {
+                            selectedTabIndex -> {
+                                Text(
+                                    text = item.title,
+                                    color = Color.White,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+
+                            else -> {
+                                Text(
+                                    text = item.title,
+                                    color = colorResource(id = R.color.unselectedcolor),
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Normal
+                                )
+                            }
+                        }
+                    })
+            }
+        }
+        HorizontalPager(
+            state = pagerState, modifier = modifier
+                .fillMaxSize()
+                .weight(1f)
+        ) { index ->
+            when (index) {
+                0 -> TrendingWallpapers(navController)
+                1 -> Categories(categoriesList = CategoriesData.loadCategories(), navController)
+                2 -> FavoriteWallpapers(navController = navController)
+            }
+        }
+    }
 }
+

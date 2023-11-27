@@ -27,21 +27,20 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-
 @Composable
 fun SplashScreen(navController: NavController, modifier: Modifier = Modifier) {
     Box {
-        val splashImage = painterResource(id = R.drawable.splashwallpaper)
+        val splashImage = painterResource(id = R.drawable.splashbcg)
         Image(
             painter = splashImage,
             contentDescription = stringResource(id = R.string.description),
             contentScale = ContentScale.FillBounds,
-            alpha = 0.8f
+            alpha = 0.9f
         )
         Column(
             modifier.align(Alignment.Center)
         ) {
-            SplashText(wallpaperText = "4k")
+            SplashText(wallpaperText = "HD")
             SplashText(wallpaperText = "Wallpapers")
         }
     }
@@ -50,7 +49,6 @@ fun SplashScreen(navController: NavController, modifier: Modifier = Modifier) {
         navigateToMainScreen(navController)
     }
 }
-
 @Composable
 fun SplashText(wallpaperText: String, modifier: Modifier = Modifier) {
     Text(
@@ -65,7 +63,6 @@ fun SplashText(wallpaperText: String, modifier: Modifier = Modifier) {
         fontFamily = FontFamily.Serif
     )
 }
-
 private fun navigateToMainScreen(navController: NavController) {
     CoroutineScope(Dispatchers.Main).launch {
         delay(3000)
