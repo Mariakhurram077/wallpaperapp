@@ -7,10 +7,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
@@ -32,28 +31,27 @@ import androidx.navigation.NavController
 import com.example.wallpapercomposeapp.R
 import com.example.wallpapercomposeapp.model.WallpapersDataModel
 import com.example.wallpapercomposeapp.viewmodel.WallpaperViewModel
-
 @Composable
 fun SearchWallpapers(navController: NavController) {
     Column(modifier = Modifier.background(Color.Black)) {
         SearchBar(navController)
     }
 }
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchBar(navController:NavController) {
     val wallpaperViewModel: WallpaperViewModel = hiltViewModel()
     var searchInput by remember { mutableStateOf("") }
+
     OutlinedTextField(
         value = searchInput,
         label = { Text(text= "Enter Category to Search", color = Color.White, fontWeight = FontWeight.SemiBold, fontFamily = FontFamily.SansSerif) },
         onValueChange = {
             searchInput = it
         },
-        colors = TextFieldDefaults.outlinedTextFieldColors(
-            unfocusedBorderColor = Color.White,
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = Color.White,
             focusedBorderColor = colorResource(id = R.color.indicatorcolor),
-        textColor = Color.White
+            unfocusedBorderColor = Color.White,
         )
     ,
         keyboardOptions = KeyboardOptions.Default.copy(
@@ -67,11 +65,9 @@ fun SearchBar(navController:NavController) {
     Button(
         onClick = {
             wallpaperViewModel.updateWallpapersType(searchInput)
-            wallpaperViewModel.getAllWallpapers()
-        },
+            wallpaperViewModel.getAllWallpapers() },
         colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-        modifier = Modifier.padding(start = 8.dp)
-    ) {
+        modifier = Modifier.padding(start = 8.dp)) {
         Text(text="Search", color = Color.Black, fontSize = 15.sp)
     }
     val wallpapersImages: State<List<WallpapersDataModel>> =

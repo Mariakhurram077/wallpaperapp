@@ -15,7 +15,10 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.AccountBox
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -50,14 +53,25 @@ import com.example.wallpapercomposeapp.viewmodel.FavoritesViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WallpaperImage(imageUrl: String, imageId:Int, navController: NavController, modifier: Modifier = Modifier) {
+fun WallpaperImage(
+    imageUrl: String,
+    imageId: Int,
+    navController: NavController,
+    modifier: Modifier = Modifier
+) {
     val favoriteViewModel: FavoritesViewModel = hiltViewModel()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var isFavorite by remember { mutableStateOf(false) }
     var favIcon by remember(isFavorite) {
         mutableStateOf(if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder)
+    }
+    val sheetState = rememberModalBottomSheetState()
+    val isSheetOpen = remember {
+        mutableStateOf(false)
     }
 
     LaunchedEffect(imageId) {
@@ -68,13 +82,15 @@ fun WallpaperImage(imageUrl: String, imageId:Int, navController: NavController, 
         favIcon = if (isFav) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder
     }
 
-
     Box(modifier = modifier.fillMaxSize()) {
         AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current).data(imageUrl).crossfade(true).build(),
+            model = ImageRequest.Builder(LocalContext.current).data(imageUrl).crossfade(true)
+                .build(),
             contentDescription = stringResource(R.string.description),
             contentScale = ContentScale.Crop,
-            modifier = modifier.fillMaxSize().drawWithContent {
+            modifier = modifier
+                .fillMaxSize()
+                .drawWithContent {
                     drawContent()
                     val gradientBrush = Brush.verticalGradient(
                         colors = listOf(Color.Transparent, Color.Black),
@@ -86,13 +102,17 @@ fun WallpaperImage(imageUrl: String, imageId:Int, navController: NavController, 
         Image(
             painter = painterResource(id = R.drawable.backbutton),
             contentDescription = null,
-            modifier = modifier.padding(top = 30.dp, start = 25.dp).clickable {
+            modifier = modifier
+                .padding(top = 30.dp, start = 25.dp)
+                .clickable {
                     navController.popBackStack()
                 })
         Row(
-            modifier = modifier.fillMaxSize()
+            modifier = modifier
+                .fillMaxSize()
                 .padding(bottom = 40.dp, start = 14.dp, end = 14.dp),
-            horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
+            horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom
+        ) {
             BottomBar(
                 imageVector = ImageVector.vectorResource(id = R.drawable.download_button),
                 imageText = "Download", onClick = {
@@ -109,7 +129,8 @@ fun WallpaperImage(imageUrl: String, imageId:Int, navController: NavController, 
             BottomBar(
                 imageVector = Icons.Outlined.AccountBox, imageText = "Set Wallpaper",
                 onClick = {
-                    toastMessage("Set Wallpaper", context)
+                    isSheetOpen.value = true
+                    // toastMessage("Setting Wallpaper", context)
                 })
             BottomBar(
                 imageVector = favIcon, imageText = "Favorite",
@@ -117,15 +138,48 @@ fun WallpaperImage(imageUrl: String, imageId:Int, navController: NavController, 
                     coroutineScope.launch {
                         if (!isFavorite) {
                             favIcon = Icons.Filled.Favorite
-                            favoriteViewModel.addWallpapersToFavorite(WallpapersDataModel(0,imageUrl,0,true)) // Invoke ViewModel function to add wallpaper
+                            favoriteViewModel.addWallpapersToFavorite(
+                                WallpapersDataModel(
+                                    0,
+                                    imageUrl,
+                                    0,
+                                    true
+                                )
+                            ) // Invoke ViewModel function to add wallpaper
                             toastMessage("Added to Favorite", context)
                         } else {
                             toastMessage("Already added", context)
                         }
-                }})
+                    }
+                })
+        }
+
+    }
+    if (isSheetOpen.value) {
+        ModalBottomSheet(
+            sheetState = sheetState,
+            onDismissRequest = { isSheetOpen.value = false }) {
+            Column(
+                modifier = Modifier
+                    .padding(bottom = 50.dp)
+                    .align(Alignment.CenterHorizontally),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                WallpaperSettingText(text = "Set as Home Screen Wallpaper", onClick = { toastMessage("home screen",context)
+                isSheetOpen.value=false
+                })
+                WallpaperSettingText(text = "Set as Lock Screen Wallpaper", onClick = { toastMessage("lock screen",context)
+                isSheetOpen.value=false
+                })
+                WallpaperSettingText(text = "Set on Both", onClick = { toastMessage("both",context)
+                isSheetOpen.value=false
+                })
+            }
         }
     }
 }
+
 @Composable
 fun BottomBar(imageVector: ImageVector, imageText: String, onClick: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable {
@@ -145,6 +199,17 @@ fun BottomBar(imageVector: ImageVector, imageText: String, onClick: () -> Unit) 
             fontFamily = FontFamily.Serif
         )
     }
+}
+
+@Composable
+fun WallpaperSettingText(text: String, onClick: () -> Unit) {
+    Text(
+        text = text,
+        color = Color.Black,
+        fontSize = 19.sp,
+        modifier = Modifier.padding(20.dp).clickable {
+                onClick()
+            })
 }
 fun toastMessage(message: String, context: Context) {
     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()

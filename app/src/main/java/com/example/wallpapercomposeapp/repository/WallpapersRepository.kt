@@ -51,14 +51,12 @@ class WallpapersRepository @Inject constructor(
     suspend fun addWallpapersToFavorite(wallpapersDataModel: WallpapersDataModel) {
         wallpaperDatabase.wallpapersDao().addFavorite(wallpapersDataModel)
     }
-
     suspend fun readFavoriteWallpapers() {
         val favorites = withContext(Dispatchers.IO) {
             wallpaperDatabase.wallpapersDao().readFavouriteWallpaper()
         }
         _favoriteWallpapersMutableStateFlow.emit(favorites)
     }
-
     fun checkFavoriteWallpaper(itemImageId: Int): Boolean{
         val favoriteWallpaper = wallpaperDatabase.wallpapersDao().checkFavoriteWallpaper(itemImageId)
         return favoriteWallpaper != null
