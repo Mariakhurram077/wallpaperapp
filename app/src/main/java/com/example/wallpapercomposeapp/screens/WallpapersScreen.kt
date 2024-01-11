@@ -36,28 +36,35 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.wallpapercomposeapp.R
 import com.example.wallpapercomposeapp.data.CategoriesData
 import com.example.wallpapercomposeapp.helpers.BackPressHelper
 import com.example.wallpapercomposeapp.model.TabItemModel
+import com.example.wallpapercomposeapp.viewmodel.FavoritesViewModel
+
 @Composable
-fun WallpapersScreen(navController: NavController, modifier: Modifier = Modifier) {
+fun WallpapersScreen(
+    navController: NavController,
+    favoriteViewModel: FavoritesViewModel,
+    modifier: Modifier = Modifier
+) {
     val context = LocalContext.current
     Column(modifier = modifier.background(colorResource(id = R.color.backgroundcolor))) {
         TopBar(navController)
-        TabLayout(navController)
+        TabLayout(navController, favoriteViewModel)
     }
 
     BackHandler {
         BackPressHelper.onBackPressing(context)
     }
 }
+
 @Composable
-fun TopBar(navController: NavController,modifier: Modifier = Modifier) {
+fun TopBar(navController: NavController, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .background(Color.Black)
@@ -76,17 +83,23 @@ fun TopBar(navController: NavController,modifier: Modifier = Modifier) {
             modifier = Modifier
                 .size(50.dp)
                 .padding(end = 20.dp)
-                .align(Alignment.CenterVertically).clickable {
-                        navController.navigate("SearchWallpapers")
+                .align(Alignment.CenterVertically)
+                .clickable {
+                    navController.navigate("SearchWallpapers")
                 },
             colorFilter = ColorFilter.tint(Color.White)
         )
     }
 }
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun TabLayout(navController: NavController, modifier: Modifier = Modifier) {
-    val tabItems = listOf(TabItemModel("Trending"), TabItemModel("Categories"), TabItemModel("Favorites"))
+fun TabLayout(
+    navController: NavController,
+    favoriteViewModel: FavoritesViewModel,
+    modifier: Modifier = Modifier) {
+    val tabItems =
+        listOf(TabItemModel("Trending"), TabItemModel("Categories"), TabItemModel("Favorites"))
     var selectedTabIndex by remember {
         mutableIntStateOf(0)
     }
@@ -102,6 +115,14 @@ fun TabLayout(navController: NavController, modifier: Modifier = Modifier) {
     LaunchedEffect(key1 = pagerState.currentPage, pagerState.isScrollInProgress) {
         if (!pagerState.isScrollInProgress) {
             selectedTabIndex = pagerState.currentPage
+        }
+    }
+
+    LaunchedEffect(navController.currentBackStackEntryAsState().value) {
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            if (destination.route == "MainScreen") {
+                selectedTabIndex = pagerState.currentPage
+            }
         }
     }
 
@@ -156,7 +177,10 @@ fun TabLayout(navController: NavController, modifier: Modifier = Modifier) {
             when (index) {
                 0 -> TrendingWallpapers(navController)
                 1 -> Categories(categoriesList = CategoriesData.loadCategories(), navController)
-                2 -> FavoriteWallpapers(navController = navController)
+                2 -> FavoriteWallpapers(
+                    navController = navController,
+                    favoriteViewModel = favoriteViewModel
+                )
             }
         }
     }

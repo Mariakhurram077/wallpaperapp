@@ -31,7 +31,6 @@ android {
             )
         }
         debug {
-            isDebuggable=false
         }
     }
     compileOptions {
@@ -99,6 +98,8 @@ dependencies {
     implementation ("androidx.room:room-ktx:2.6.0")
     kapt("androidx.room:room-compiler:$room_version")
 
+    //glide
+    implementation ("com.github.bumptech.glide:glide:4.15.1")
 }
 kapt {
     correctErrorTypes = true

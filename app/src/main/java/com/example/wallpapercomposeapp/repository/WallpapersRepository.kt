@@ -8,6 +8,7 @@ import com.example.wallpapercomposeapp.model.WallpapersDataModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
@@ -19,46 +20,38 @@ class WallpapersRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val wallpaperDatabase: WallpaperDatabase
 ) {
-    private val _wallpapersMutableStateFlow =
-        MutableStateFlow<List<WallpapersDataModel>>(emptyList())
-    val wallpapersStateFlow: StateFlow<List<WallpapersDataModel>>
-        get() = _wallpapersMutableStateFlow
-
-    private val _favoriteWallpapersMutableStateFlow =
-        MutableStateFlow<List<WallpapersDataModel>>(emptyList())
-    val favoriteWallpapersStateFlow: StateFlow<List<WallpapersDataModel>>
-        get() = _favoriteWallpapersMutableStateFlow
-
     suspend fun getAllWallpapers(
         key: String, page: Int, perPage: Int,
         type: String, editorChoice: Boolean
-    ) {
+    ):List<WallpapersDataModel> {
+        val wallpapersList= mutableListOf<WallpapersDataModel>()
         try {
             val response = withTimeout(30000) {
                 wallpapersApi.getImages(key, page, perPage, type, editorChoice)
             }
             if (response.isSuccessful && response.body() != null) {
-                _wallpapersMutableStateFlow.emit(response.body()!!.hits)
+                wallpapersList.addAll(response.body()!!.hits)
             }
         } catch (e: TimeoutCancellationException) {
             Toast.makeText(context, "Request timed out", Toast.LENGTH_SHORT).show()
-            _wallpapersMutableStateFlow.emit(emptyList())
+           // _wallpapersMutableStateFlow.emit(emptyList())
         } catch (e: Exception) {
-            _wallpapersMutableStateFlow.emit(emptyList())
+            //_wallpapersMutableStateFlow.emit(emptyList())
         }
+        return wallpapersList
     }
 
     suspend fun addWallpapersToFavorite(wallpapersDataModel: WallpapersDataModel) {
         wallpaperDatabase.wallpapersDao().addFavorite(wallpapersDataModel)
     }
-    suspend fun readFavoriteWallpapers() {
-        val favorites = withContext(Dispatchers.IO) {
-            wallpaperDatabase.wallpapersDao().readFavouriteWallpaper()
-        }
-        _favoriteWallpapersMutableStateFlow.emit(favorites)
+
+    suspend fun readFavoriteWallpapers(): Flow<List<WallpapersDataModel>> = withContext(Dispatchers.IO) {
+        return@withContext wallpaperDatabase.wallpapersDao().readFavouriteWallpaper()
     }
-    fun checkFavoriteWallpaper(itemImageId: Int): Boolean{
-        val favoriteWallpaper = wallpaperDatabase.wallpapersDao().checkFavoriteWallpaper(itemImageId)
+
+    fun checkFavoriteWallpaper(itemImageId: Int): Boolean {
+        val favoriteWallpaper =
+            wallpaperDatabase.wallpapersDao().checkFavoriteWallpaper(itemImageId)
         return favoriteWallpaper != null
     }
 }

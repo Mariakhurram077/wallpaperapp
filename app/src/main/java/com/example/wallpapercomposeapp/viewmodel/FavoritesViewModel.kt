@@ -6,15 +6,20 @@ import com.example.wallpapercomposeapp.model.WallpapersDataModel
 import com.example.wallpapercomposeapp.repository.WallpapersRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+
 @HiltViewModel
 class FavoritesViewModel @Inject constructor(private val wallpapersRepository: WallpapersRepository) :
     ViewModel() {
+    private var _favoriteWallpapersStateFlow =
+        MutableStateFlow<List<WallpapersDataModel>>(emptyList())
     val favoriteWallpapersStateFlow: StateFlow<List<WallpapersDataModel>>
-        get() = wallpapersRepository.favoriteWallpapersStateFlow
+        get() = _favoriteWallpapersStateFlow
+
     fun addWallpapersToFavorite(wallpapersDataModel: WallpapersDataModel) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
@@ -22,12 +27,18 @@ class FavoritesViewModel @Inject constructor(private val wallpapersRepository: W
             }
         }
     }
-    init {
+    fun readFavoriteWallpapers() {
         viewModelScope.launch {
-             wallpapersRepository.readFavoriteWallpapers()
+            val favoriteWallpapers = wallpapersRepository.readFavoriteWallpapers()
+            favoriteWallpapers.collect{
+                _favoriteWallpapersStateFlow.emit(it)
+            }
         }
     }
-    fun checkFavoriteWallpaper(itemImageId: Int):Boolean{
+    init {
+        readFavoriteWallpapers()
+    }
+    fun checkFavoriteWallpaper(itemImageId: Int): Boolean {
         return wallpapersRepository.checkFavoriteWallpaper(itemImageId)
     }
 }

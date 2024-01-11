@@ -36,7 +36,7 @@ import java.nio.charset.StandardCharsets
 
 @Composable
 fun TrendingWallpapers(navController: NavController) {
-    val wallpaperViewModel: WallpaperViewModel = hiltViewModel()
+    val wallpaperViewModel: WallpaperViewModel= hiltViewModel()
     val wallpapersImages: State<List<WallpapersDataModel>> =
         wallpaperViewModel.wallpapersStateFlow.collectAsState()
     if (wallpapersImages.value.isEmpty()) {
@@ -44,8 +44,11 @@ fun TrendingWallpapers(navController: NavController) {
     } else {
         WallpapersListColumn(
             wallpapersImages = wallpapersImages.value,
-            navController = navController)
-    }}
+            navController = navController
+        )
+    }
+}
+
 @Composable
 fun WallpapersListColumn(
     wallpapersImages: List<WallpapersDataModel>,
@@ -53,17 +56,19 @@ fun WallpapersListColumn(
 ) {
     LazyVerticalGrid(columns = GridCells.Fixed(3),
         content = {
-        items(wallpapersImages) {
-            WallpaperImageCard(
-                imageUrl = it.largeImageURL,
-                it.id,
-                onClick = { imageUrl, isFavorite ->
-                    val encodedUrl = URLEncoder.encode(imageUrl, StandardCharsets.UTF_8.toString())
-                    navController.navigate("WallpaperSettingScreen/${encodedUrl}/${isFavorite}")
-                })
-        }
-    })
+            items(wallpapersImages) {
+                WallpaperImageCard(
+                    imageUrl = it.largeImageURL,
+                    it.id,
+                    onClick = { imageUrl, isFavorite ->
+                        val encodedUrl =
+                            URLEncoder.encode(imageUrl, StandardCharsets.UTF_8.toString())
+                        navController.navigate("WallpaperSettingScreen/${encodedUrl}/${isFavorite}")
+                    })
+            }
+        })
 }
+
 @Composable
 fun WallpaperImageCard(
     imageUrl: String,
@@ -84,6 +89,7 @@ fun WallpaperImageCard(
             },
     )
 }
+
 @Composable
 fun SimpleCircularProgressComponent(modifier: Modifier = Modifier) {
     Column(

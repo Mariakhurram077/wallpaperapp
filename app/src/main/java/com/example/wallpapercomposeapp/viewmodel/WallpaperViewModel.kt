@@ -7,30 +7,42 @@ import com.example.wallpapercomposeapp.model.WallpapersDataModel
 import com.example.wallpapercomposeapp.repository.WallpapersRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+
 @HiltViewModel
 class WallpaperViewModel @Inject constructor(
-    private val wallpapersRepository: WallpapersRepository) : ViewModel() {
-    private val _wallpapersType = MutableStateFlow("hd")
+    private val wallpapersRepository: WallpapersRepository
+) : ViewModel() {
+    private val _wallpapersMutableStateFlow =
+        MutableStateFlow<List<WallpapersDataModel>>(emptyList())
     val wallpapersStateFlow: StateFlow<List<WallpapersDataModel>>
-        get() = wallpapersRepository.wallpapersStateFlow
+        get() = _wallpapersMutableStateFlow
+        private var job: Job? = null
+
     fun updateWallpapersType(newType: String) {
         viewModelScope.launch {
-            _wallpapersType.emit(newType)
+            getAllWallpapers(newType)
         }
     }
+
     init {
-        getAllWallpapers()
+        getAllWallpapers("wallpaper")
     }
-    fun getAllWallpapers() {
-        viewModelScope.launch {
+     private fun getAllWallpapers(type: String) {
+        job?.cancel()
+        job=viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                wallpapersRepository.getAllWallpapers(Constants.api_KEY, 1, 200, _wallpapersType.value, true)
+                val wallpapersList=wallpapersRepository.getAllWallpapers(
+                    Constants.api_KEY, 1, 200, type, true
+                )
+                _wallpapersMutableStateFlow.emit(wallpapersList)
             }
         }
     }
+
 }

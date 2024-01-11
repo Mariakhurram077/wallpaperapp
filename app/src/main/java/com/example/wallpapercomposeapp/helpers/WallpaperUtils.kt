@@ -1,6 +1,7 @@
 package com.example.wallpapercomposeapp.helpers
 
 import android.app.DownloadManager
+import android.app.WallpaperManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -9,12 +10,18 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.widget.Toast
 import androidx.core.content.FileProvider
+import com.bumptech.glide.Glide
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 object WallpaperUtils {
+    private val mainScope = CoroutineScope(Dispatchers.Main)
     fun downloadWallpaper(imageUrl: String?, context: Context){
         val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
         val uri = Uri.parse(imageUrl)
@@ -23,7 +30,6 @@ object WallpaperUtils {
         downloadManager.enqueue(request)
         Toast.makeText(context, "Downloading Wallpaper ..... ", Toast.LENGTH_SHORT).show()
     }
-
      fun shareWallpaper(bitmap: Bitmap,context: Context) {
         val wallpaperFile: File? =
             try {
@@ -86,5 +92,78 @@ object WallpaperUtils {
             connection?.disconnect()
         }
         return bitmap
+    }
+
+    fun setWallpaperOnHomeScreen(imageUrl: String, context: Context) {
+     //   progressBar?.visibility = View.VISIBLE // Show progress bar
+        mainScope.launch {
+            try {
+                val bitmap = withContext(Dispatchers.IO) {
+                    Glide.with(context)
+                        .asBitmap()
+                        .load(imageUrl)
+                        .submit()
+                        .get()
+                }
+                val wallpaperManager = WallpaperManager.getInstance(context)
+                wallpaperManager.setBitmap(bitmap, null, true, WallpaperManager.FLAG_SYSTEM)
+                Toast.makeText(context, "Wallpaper set successfully on home screen", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(context, "Failed to set Wallpaper", Toast.LENGTH_SHORT).show()
+            } finally {
+                //progressBar?.visibility = View.GONE // Hide progress bar
+            }
+        }
+    }
+
+    fun setWallpaperOnLockScreen(imageUrl: String, context: Context) {
+     //   progressBar?.visibility = View.VISIBLE // Show progress bar
+        mainScope.launch {
+            try {
+                val bitmap = withContext(Dispatchers.IO) {
+                    Glide.with(context)
+                        .asBitmap()
+                        .load(imageUrl)
+                        .submit()
+                        .get()
+                }
+                val wallpaperManager = WallpaperManager.getInstance(context)
+                wallpaperManager.setBitmap(bitmap, null, true, WallpaperManager.FLAG_LOCK)
+                Toast.makeText(context, "Wallpaper set successfully on lock screen", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(context, "Failed to set wallpaper on lock screen", Toast.LENGTH_SHORT).show()
+            } finally {
+              //  progressBar?.visibility = View.GONE // Hide progress bar
+            }
+        }
+    }
+
+    fun setWallpaperOnBoth(imageUrl: String, context: Context) {
+        //progressBar?.visibility = View.VISIBLE // Show progress bar
+        mainScope.launch {
+            try {
+                val bitmap = withContext(Dispatchers.IO) {
+                    Glide.with(context)
+                        .asBitmap()
+                        .load(imageUrl)
+                        .submit()
+                        .get()
+                }
+                val wallpaperManager = WallpaperManager.getInstance(context)
+                wallpaperManager.setBitmap(bitmap, null, true, WallpaperManager.FLAG_SYSTEM)
+                withContext(Dispatchers.IO) {
+                    wallpaperManager.setBitmap(bitmap, null, true, WallpaperManager.FLAG_LOCK)
+                }
+                Toast.makeText(context, "Wallpaper set successfully", Toast.LENGTH_SHORT).show()
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(context, "Failed to set Wallpaper", Toast.LENGTH_SHORT).show()
+            } finally {
+             //   progressBar?.visibility = View.GONE // Hide progress bar
+            }
+        }
     }
 }

@@ -42,7 +42,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -60,9 +59,11 @@ fun WallpaperImage(
     imageUrl: String,
     imageId: Int,
     navController: NavController,
+    favoriteViewModel: FavoritesViewModel,
     modifier: Modifier = Modifier
-) {
-    val favoriteViewModel: FavoritesViewModel = hiltViewModel()
+
+    ) {
+    // val favoriteViewModel: FavoritesViewModel = hiltViewModel()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var isFavorite by remember { mutableStateOf(false) }
@@ -145,7 +146,8 @@ fun WallpaperImage(
                                     0,
                                     true
                                 )
-                            ) // Invoke ViewModel function to add wallpaper
+                            )
+                            favoriteViewModel.readFavoriteWallpapers()
                             toastMessage("Added to Favorite", context)
                         } else {
                             toastMessage("Already added", context)
@@ -166,14 +168,17 @@ fun WallpaperImage(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                WallpaperSettingText(text = "Set as Home Screen Wallpaper", onClick = { toastMessage("home screen",context)
-                isSheetOpen.value=false
+                WallpaperSettingText(text = "Set as Home Screen Wallpaper", onClick = {
+                    WallpaperUtils.setWallpaperOnHomeScreen(imageUrl, context)
+                    isSheetOpen.value = false
                 })
-                WallpaperSettingText(text = "Set as Lock Screen Wallpaper", onClick = { toastMessage("lock screen",context)
-                isSheetOpen.value=false
+                WallpaperSettingText(text = "Set as Lock Screen Wallpaper", onClick = {
+                    WallpaperUtils.setWallpaperOnLockScreen(imageUrl, context)
+                    isSheetOpen.value = false
                 })
-                WallpaperSettingText(text = "Set on Both", onClick = { toastMessage("both",context)
-                isSheetOpen.value=false
+                WallpaperSettingText(text = "Set on Both", onClick = {
+                    WallpaperUtils.setWallpaperOnBoth(imageUrl, context)
+                    isSheetOpen.value = false
                 })
             }
         }
@@ -207,10 +212,13 @@ fun WallpaperSettingText(text: String, onClick: () -> Unit) {
         text = text,
         color = Color.Black,
         fontSize = 19.sp,
-        modifier = Modifier.padding(20.dp).clickable {
+        modifier = Modifier
+            .padding(20.dp)
+            .clickable {
                 onClick()
             })
 }
+
 fun toastMessage(message: String, context: Context) {
     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
 }

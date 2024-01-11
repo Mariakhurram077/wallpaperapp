@@ -12,7 +12,7 @@ interface WallpapersDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addFavorite(wallpapersDataModel: WallpapersDataModel)
     @Query("SELECT * FROM FavoriteWallpapers")
-    fun readFavouriteWallpaper(): List<WallpapersDataModel>
+    fun readFavouriteWallpaper(): Flow<List<WallpapersDataModel>>
 
     @Query("SELECT * FROM FavoriteWallpapers WHERE id = :itemImageId")
     fun checkFavoriteWallpaper(itemImageId: Int): WallpapersDataModel?

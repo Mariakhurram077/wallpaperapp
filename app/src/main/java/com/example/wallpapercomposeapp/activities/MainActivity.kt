@@ -10,6 +10,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -23,6 +24,8 @@ import com.example.wallpapercomposeapp.screens.SplashScreen
 import com.example.wallpapercomposeapp.screens.WallpaperImage
 import com.example.wallpapercomposeapp.screens.WallpapersScreen
 import com.example.wallpapercomposeapp.ui.theme.WallpaperComposeAppTheme
+import com.example.wallpapercomposeapp.viewmodel.FavoritesViewModel
+import com.example.wallpapercomposeapp.viewmodel.WallpaperViewModel
 import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -30,64 +33,72 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             WallpaperComposeAppTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background) {
+                    color = MaterialTheme.colorScheme.background
+                ) {
                     WallpapersApp()
                 }
             }
         }
     }
 }
+
 @Composable
 fun WallpapersApp() {
     val navController = rememberNavController()
+    val favoritesViewModel: FavoritesViewModel = hiltViewModel()
     NavHost(navController = navController, startDestination = "SplashScreen") {
         composable(route = "SplashScreen") {
             SplashScreen(navController)
         }
 
         composable(route = "MainScreen") {
-            WallpapersScreen(navController)
+            WallpapersScreen(navController,favoritesViewModel)
         }
 
-        composable(route = "WallpaperSettingScreen/{imageUrl}/{imageId}", arguments = listOf(
-            navArgument("imageUrl") {
-                type = NavType.StringType
-            },
-            navArgument("imageId"){
-                type= NavType.IntType
-            })) {
-            val imageUrl=it.arguments?.getString("imageUrl")
-            val imageId=it.arguments?.getInt("imageId")
+        composable(
+            route = "WallpaperSettingScreen/{imageUrl}/{imageId}", arguments = listOf(
+                navArgument("imageUrl") {
+                    type = NavType.StringType
+                },
+                navArgument("imageId") {
+                    type = NavType.IntType
+                })
+        ) {
+            val imageUrl = it.arguments?.getString("imageUrl")
+            val imageId = it.arguments?.getInt("imageId")
 
             Log.i("wallpaperImageId", "WallpapersApp: $imageId")
-            WallpaperImage(imageUrl = imageUrl!!,imageId!!,navController)
+            WallpaperImage(imageUrl = imageUrl!!, imageId!!, navController, favoritesViewModel)
         }
 
-        composable(route="CategoriesScreen"){
-            Categories(categoriesList = CategoriesData.loadCategories(), navController = navController)
+        composable(route = "CategoriesScreen") {
+            Categories(
+                categoriesList = CategoriesData.loadCategories(),
+                navController = navController
+            )
         }
 
-        composable(route="CategoriesWallpapers/{categoryName}", arguments = listOf(
-            navArgument("categoryName"){
-                type= NavType.StringType
+        composable(route = "CategoriesWallpapers/{categoryName}", arguments = listOf(
+            navArgument("categoryName") {
+                type = NavType.StringType
             }
-        )){
-            val categoryName=it.arguments?.getString("categoryName")
+        )) {
+            val categoryName = it.arguments?.getString("categoryName")
             CategoriesWallpapers(categoryName = categoryName!!, navController = navController)
         }
 
-        composable("SearchWallpapers"){
+        composable("SearchWallpapers") {
             SearchWallpapers(navController)
         }
     }
 }
+
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun GreetingPreview() {
     WallpaperComposeAppTheme {
         //
-}
+    }
 }
